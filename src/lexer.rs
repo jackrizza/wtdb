@@ -1,5 +1,5 @@
 
-const COMPARE_QUERIES : [&str; 4] = ["SELECT", "INSERT", "FROM", "WHERE"];
+const COMPARE_QUERIES : [&str; 7] = ["SELECT", "INSERT", "FROM", "WHERE", "UPDATE", "INTO", "VALUES"];
 const COMPARE_OPERATORS : [&str; 3] = ["*", "+", "-"];
 
 #[derive(Debug, Clone)]
@@ -11,6 +11,13 @@ pub enum Description {
     Float(f32),
     None,
 }
+
+#[derive(Debug)]
+pub enum Right {
+    Right(Vec<i32>),
+    Ref(i32)
+}
+
 
 #[derive(Debug)]
 pub enum WarpReturn {
@@ -36,7 +43,7 @@ pub struct Node {
 pub struct LeftRight {
     pub id : i32,
     pub left : i32,
-    pub right : Vec<i32>,
+    pub right : Right,
 }
 
 
@@ -95,6 +102,8 @@ impl Lexer {
     } 
 
     pub fn node_tree(&mut self) {
+
+        // TODO : commas?
         for s in self.query.split(" ") {
             // if Query
             if COMPARE_QUERIES.iter().filter(|x| **x == s).collect::<Vec<&&str>>().len() > 0 {
@@ -150,16 +159,26 @@ impl Lexer {
                 _ => println!("Could not read Description for left right builder"),
             };
 
-            if right.len() > 0 && left != -1 {
+            if right.len() > 0 && left != -1  {
                 self.executer.push(LeftRight {
                     id : (self.executer.len() + 1) as i32,
                     left : left,
-                    right : right
+                    right : Right::Right(right)
                 });
 
                 left = -1;
                 right = Vec::new();
+            } else if left != -1 { 
+                self.executer.push(LeftRight {
+                    id : (self.executer.len() + 1) as i32,
+                    left : left,
+                    right : Right::Ref(self.executer[last].id)
+                });
+
+                left = -1;
+
             }
+
             cloned_node_tree.pop();
         }
     }
