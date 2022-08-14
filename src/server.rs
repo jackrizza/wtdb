@@ -1,4 +1,5 @@
 
+use crate::lexer;
 use actix_web::{get, post, web, App, HttpServer, Responder, Result};
 use serde::Deserialize;
 
@@ -9,7 +10,11 @@ pub struct web_query {
 // Database Handlers
 #[post("/execute")]
 pub async fn execute(query : web::Json<web_query>) -> Result<String> {
-    println!("post request with query : {}", query.query); 
+    println!("post request with query : {}", query.query);
+    let mut query : lexer::Lexer = lexer::Lexer::new(query.query.clone());
+    query.node_tree();
+    query.executer();
+    println!("{:?}", query);
     Ok(format!("{}", query.query))
 }
 
